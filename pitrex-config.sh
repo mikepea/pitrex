@@ -156,15 +156,6 @@ if [ $CONFIGONLY ]; then
  exit 0
 fi
 
-echo "Editing rc.local"
-
-#Add commands to rc.local:
-
-R1="`fgrep \"#Keep CPU frequency at maximum:\" /etc/rc.local`"
-if [ "$R1" != "" ] ; then
-    echo "WARNING: rc.local configuration appears to have been done already."
-fi
-
 if [ -z $YESTOALL ]; then
  echo "Do you want to disable HDMI and set performance to maximum at boot time?"
  YN=$(confirm "Yes or No?")
@@ -173,31 +164,50 @@ else
 fi
 
 if [ "$YN" == "y" -a -z $KEEPHDMI ] ; then
-sed -i '/^exit 0$/i'' \
-#Disable HDMI/Composite video output:\
-tvservice \-o' /etc/rc.local
-echo "adding: tvservice -o to /etc/rc.local"
+  touch /boot/pitrex/settings/disable_video
 else
-sed -i '/^exit 0$/i'' \
-#Disable HDMI/Composite video output:\
-# tvservice \-o' /etc/rc.local
+  rm /boot/pitrex/settings/disable_video
 fi
 
 if [ "$YN" == "y" ] ; then
-sed -i '/^exit 0$/i'' \
-#Keep CPU frequency at maximum:\
-echo \-n performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor' /etc/rc.local
-echo "adding: performance mode to /etc/rc.local"
+  touch /boot/pitrex/settings/performance_mode
 else
-sed -i '/^exit 0$/i'' \
-#Keep CPU frequency at maximum:\
-# echo \-n performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor' /etc/rc.local
+  rm /boot/pitrex/settings/performance_mode
 fi
+
+RC_PITREX="/etc/rc.local_pitrex"
+echo "Editing rc.local to execute ${RC_PITREX}"
+R1="`fgrep \". $RC_PITREX\" /etc/rc.local`"
+if [ "$R1" != "" ] ; then
+    echo "WARNING: rc.local configuration appears to have been done already."
+else
+    echo ". $RC_PITREX" >> /etc/rc.local
+fi
+
+echo "Creating ${RC_PITREX}"
+touch $RC_PITREX && chmod 0755 $RC_PITREX && chown root:root $RC_PITREX ||
+  echo "ERROR: failed to create $RC_PITREX"
+
+cat > $RC_PITREX <<EOF
+# PiTrex specific boot up
+# This file is automatically managed by pitrex-config.sh
+# WARNING: local updates will be overwritten on next execution of pitrex-config.sh
+
+if [ -f /boot/pitrex/settings/disable_hdmi ]; then
+  # Disable HDMI/Composite video output
+  tvservice -o
+fi
+
+if [ -f /boot/pitrex/settings/performance_mode ]; then
+  # Keep CPU frequency at maximum:
+  echo -n performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+fi
+
+EOF
 
 echo "Enabling rc.local"
 
 #Enable execution of rc.local on start-up with Systemd:
-
 chmod a+x /etc/rc.local
 
 # update if it exists already
