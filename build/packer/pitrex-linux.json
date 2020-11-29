@@ -2,6 +2,7 @@
   "variables": {
     "wifi_name":      null,
     "wifi_password":  null,
+    "hostname": "pitrex",
     "ssh_pubkey":     "",
     "pitrex_git_url": "https://github.com/gtoal/pitrex.git",
     "pitrex_prebuild": "https://github.com/gtoal/pitrex/releases/download/beta1/pitrex_beta1.tar.gz",
@@ -28,6 +29,14 @@
       "inline": [
         "echo 'running apt-get update'",
         "apt-get update"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "echo 'setting hostname'",
+        "echo '{{ user `hostname` }}' > /etc/hostname",
+        "sed -i 's/raspberrypi/{{ user `hostname` }}/' /etc/hosts"
       ]
     },
     {
