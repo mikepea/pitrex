@@ -40,10 +40,22 @@
       ]
     },
     {
+      "type": "file",
+      "source": "{{ user `basedir` }}/rc.local_pitrex",
+      "destination": "/tmp/rc.local_pitrex"
+    },
+    {
+      "type": "shell",
+      "execute_command": "chmod +x {{ .Path }}; sudo {{ .Path }} -y -keephdmi",
+      "script": "{{ user `basedir` }}/pitrex-config.sh"
+    },
+    {
       "type": "shell",
       "inline": [
         "echo 'updating wpa_supplicant.conf'",
-        "wpa_passphrase \"{{user `wifi_name`}}\" \"{{user `wifi_password`}}\" | sed -e 's/#.*$//' -e '/^$/d' >> /etc/wpa_supplicant/wpa_supplicant.conf"
+        "echo 'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev' > /boot/settings/wpa_supplicant.conf",
+        "echo 'update_config=1' >> /boot/settings/wpa_supplicant.conf",
+        "wpa_passphrase \"{{user `wifi_name`}}\" \"{{user `wifi_password`}}\" | sed -e 's/#.*$//' -e '/^$/d' >> /boot/settings/wpa_supplicant.conf"
       ]
     },
     {
@@ -55,11 +67,6 @@
         "install -m 644 -o pi -g pi /dev/null /home/pi/.ssh/authorized_keys",
         "echo '{{user `ssh_pubkey`}}' > /home/pi/.ssh/authorized_keys"
       ]
-    },
-    {
-      "type": "shell",
-      "execute_command": "chmod +x {{ .Path }}; sudo {{ .Path }} -y -keephdmi",
-      "script": "{{ user `basedir` }}/pitrex-config.sh"
     },
     {
       "type": "shell",

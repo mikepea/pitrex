@@ -164,48 +164,33 @@ else
 fi
 
 if [ "$YN" == "y" -a -z $KEEPHDMI ] ; then
-  touch /boot/pitrex/settings/disable_video
+  touch /boot/settings/disable_video
 else
-  rm /boot/pitrex/settings/disable_video
+  rm -f /boot/settings/disable_video
 fi
 
 if [ "$YN" == "y" ] ; then
-  touch /boot/pitrex/settings/performance_mode
+  touch /boot/settings/performance_mode
 else
-  rm /boot/pitrex/settings/performance_mode
+  rm -f /boot/settings/performance_mode
 fi
 
 RC_PITREX="/etc/rc.local_pitrex"
 echo "Editing rc.local to execute ${RC_PITREX}"
 R1="`fgrep \". $RC_PITREX\" /etc/rc.local`"
 if [ "$R1" != "" ] ; then
-    echo "WARNING: rc.local configuration appears to have been done already."
+  echo "WARNING: rc.local configuration appears to have been done already."
 else
-    echo ". $RC_PITREX" >> /etc/rc.local
+  # also run our own rc.local script
+  # rc.local has an 'exit 0' at the end, so we can't just cat to the end of it :/
+  sed -i "/^exit 0$/i\. $RC_PITREX" /etc/rc.local
 fi
 
-echo "Creating ${RC_PITREX}"
-touch $RC_PITREX && chmod 0755 $RC_PITREX && chown root:root $RC_PITREX ||
+echo "Copying ${RC_PITREX} boot script into place"
+install -m 0755 -o root -g root $(dirname $0)/rc.local_pitrex "${RC_PITREX}" ||
   echo "ERROR: failed to create $RC_PITREX"
 
-cat > $RC_PITREX <<EOF
-# PiTrex specific boot up
-# This file is automatically managed by pitrex-config.sh
-# WARNING: local updates will be overwritten on next execution of pitrex-config.sh
-
-if [ -f /boot/pitrex/settings/disable_hdmi ]; then
-  # Disable HDMI/Composite video output
-  tvservice -o
-fi
-
-if [ -f /boot/pitrex/settings/performance_mode ]; then
-  # Keep CPU frequency at maximum:
-  echo -n performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
-fi
-
-EOF
-
-echo "Enabling rc.local"
+echo "Enabling rc.local in systemd"
 
 #Enable execution of rc.local on start-up with Systemd:
 chmod a+x /etc/rc.local

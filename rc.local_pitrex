@@ -1,0 +1,21 @@
+#!/bin/bash
+# This script is run on each boot of PiTrex Pi OS
+
+# This file is automatically managed by pitrex-config.sh
+# WARNING: local updates will be overwritten on next execution of pitrex-config.sh
+
+if [ -f /boot/pitrex/disable_video ]; then
+  # Disable HDMI/Composite video output
+  tvservice -o
+fi
+
+if [ -f /boot/settings/performance_mode ]; then
+  # Keep CPU frequency at maximum:
+  echo -n performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+fi
+
+wpa_n="/boot/settings/wpa_supplicant.conf"
+wpa_o="/etc/wpa_supplicant/wpa_supplicant.conf"
+if [ -f $wpa_n ]; then
+  install -m 0600 -o root -g root $wpa_n $wpa_o && killall -HUP wpa_supplicant
+fi
