@@ -1,0 +1,25 @@
+
+
+packer:
+	packer build -var-file=./.packer.d/build-vars.json ./build/packer/pitrex-linux.json
+
+imgbuild:
+	vagrant provision --provision-with build-image
+
+burn:
+	test -b /dev/mmcblk0
+	sudo umount /dev/mmcblk0p1 || echo "boot not mounted"
+	sudo umount /dev/mmcblk0p2 || echo "root not mounted"
+	sudo dd bs=4M if=output-arm-image.img of=/dev/mmcblk0 conv=fsync
+
+imgmount:
+	sudo losetup /dev/loop0 ./output-arm-image.img -o 4194304
+	sudo losetup /dev/loop1 ./output-arm-image.img -o 272629760
+	sudo mount /dev/loop0 /mnt/rpi-boot
+	sudo mount /dev/loop1 /mnt/rpi-root
+
+imgumount:
+	sudo umount /dev/loop0
+	sudo umount /dev/loop1
+	sudo losetup -d /dev/loop0
+	sudo losetup -d /dev/loop1
