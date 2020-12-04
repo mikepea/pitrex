@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdbool.h>
 
 #include <baremetal/rpi-gpio.h>
 #include <baremetal/rpi-aux.h>
@@ -26,6 +27,11 @@ void cleanup_before_linux (void)
    */
   mmu_disable(); //dcache_disable(); + icache_disable(); + clean_data_cache();
   cache_flush(); /* flush I/D-cache */
+}
+
+bool fileExists(TCHAR FILE_NAME[])
+{
+  return true;
 }
 
 
@@ -145,21 +151,30 @@ void bootMenu(void)
   char *selected = ">";
   int max = (sizeof(menuItems)/sizeof(menuItems[0]))-1;
 
+  char *selectedCursor = ">";
+
   int x = -50;
   int SPREAD = 15;
   int brightnesses[]={40,50,70,90,70,50,40};
   int brightnessCounter=0;
   for (int y=20; y<20+7*SPREAD;y+=SPREAD)
   {
-    if (!(brightnessCounter+selectionStart<0) && (!(brightnessCounter+selectionStart>max)))
-      v_printString(x,y, menuItems[brightnessCounter+selectionStart].DISPLAYNAME, 5, brightnesses[brightnessCounter]);
-    if (brightnesses[brightnessCounter] == 90) selectedMenu = brightnessCounter+selectionStart;
+    int currentItem = brightnessCounter + selectionStart;
+    if (!(currentItem<0) && (!(currentItem>max)))
+    {
+      int b;
+      if (piTrexMenuItems[currentItem].present)
+        b = brightnesses[brightnessCounter];
+      else
+        b = 30; // unavailable, greyed out
+
+      v_printString(x,y, piTrexMenuItems[currentItem].DISPLAYNAME, 5, b);
+    }
+    if (brightnesses[brightnessCounter] == 90) selectedMenu = currentItem;
     brightnessCounter++;
   }
 
-
-  v_printString(-60, 20+3*SPREAD, selected, 5, 90);
-
+  v_printString(-60, 20+3*SPREAD, selectedCursor, 5, 90);
 
   if ((currentJoy1Y>50) && (selectionMade==0))
   {
@@ -232,8 +247,6 @@ void loaderMain()
     loaderSettings.loader = loaderMain;
     selectedMenu = loaderSettings.lastSelection;
     selectionStart = selectedMenu-3;
-
-//    selectionStart
 
     loadAndPlayRAW();
     v_init(); // vectrex interface
