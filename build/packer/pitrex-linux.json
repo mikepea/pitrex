@@ -110,6 +110,22 @@
         "sudo -u pi make -f Makefile.baremetal loader",
         "cp piTrexBoot/loader.pit /boot/",
         "cp piTrexBoot/pitrex.img /boot/",
+        "cp piTrexBoot/main.ym /boot/",
+        "cp piTrexBoot/pitrexSample.raw /boot/",
+        "echo DONE"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "echo 'building & installing latest linmenu menu'",
+        "cd /home/pi/src/linmenu",
+        "sudo -u pi make -f Makefile.rasbian linmenu",
+        "cp linmenu/LINMENU /opt/pitrex/bin/",
+        "cp linmenu/linmenu /opt/pitrex/bin/",
+        "mkdir -p /opt/pitrex/share/linmenu/",
+        "cp piTrexBoot/main.ym /opt/pitrex/share/linmenu/",
+        "cp piTrexBoot/pitrexSample.raw /opt/pitrex/share/linmenu/",
         "echo DONE"
       ]
     }
