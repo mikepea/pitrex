@@ -13,12 +13,15 @@ SIM_DIR := ../sim/
 PITREX_DIR := ../pitrex/pitrex/
 VECTERX_DIR := ../pitrex/vectrex/
 LOADER_DIR := ../piTrexBoot/
+INSTALL_DIR := /boot/
 
 CFLAGS := -fuse-ld=bfd -Ofast -I$(INC_DIR_PITREX) -I$(INC_DIR_LIBRARY) -L$(LIB_DIR) -mfloat-abi=hard -nostartfiles -mfpu=vfp -march=armv6zk -mtune=arm1176jzf-s -DRPI0 -DFREESTANDING -DPITREX_DEBUG -DMHZ1000 -DLOADER_START=0x4000000
 CC	= arm-none-eabi-gcc
 AS	= $(CC)
 AR	= arm-none-eabi-ar
 
+SUDO = sudo
+CP   = cp
 .PHONY: dirCheck
 .PHONY: pitrexLib loaderObjects
 
@@ -129,4 +132,13 @@ clean:
 	$(RM) pitrex.img
 	$(RM) loader.img
 	$(RM) loader.pit
+
+install:
+	test -f /boot/config.txt
+	$(SUDO) $(CP) \
+		pitrex.img \
+		loader.pit \
+		pitrexSample.raw \
+		menu.ym \
+		$(INSTALL_DIR)
 
