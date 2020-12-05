@@ -103,6 +103,16 @@ int selectedMenu;
 int selectionMade;
 int selectionStart;
 
+// time to wait before booting to Linux
+// TODO make this configurable via a file, default to no timeout
+int bootTimeout;
+int currentTicks;
+
+bool checkTimedOut() {
+  if (currentTicks > bootTimeout) return true;
+  return false;
+}
+
 
 // menu
 // todo read from disk...
@@ -112,44 +122,45 @@ void bootMenu(void)
     char *DISPLAYNAME;
     char *img;
     char *param;
-  } MenuItem;
-  MenuItem menuItems[] = {
-    {"RASPBIAN", "kernel.img", ""},
-    {"CALIBRATE", "calibrate.img", ""},
-    {"ASTEROIDS", "asteroids_sbt.img", ""},
-    {"TAILGUNNER", "tailgunner.img", ""},
-    {"VECX EMUL", "vecxemul.img", ""},
-    {"VECX DIRECT", "vecxemuld.img", ""},
-    {"GYROCKS", "gyrocks.img", ""},
-    {"HELLO", "hello.img", ""},
-    {"PACMAN", "pacman.img", ""},
-    {"GRAVITAR", "gravitar.img", ""},
-    {"SPACEDUEL", "spaceduel.img", ""},
-    {"TEMPEST", "tempest.img", ""},
-    {"LUNAR LANDER", "lunar.img", ""},
-    {"BLACK WIDOW", "blackwidow.img", ""},
-    {"DELUXE", "deluxe.img", ""},
-    {"RED BARON", "redbaron.img", ""},
-    {"RIPOFF", "cine.img", "ripoff"},
-    {"SPACE WARS", "cine.img", "spacewars"},
-    {"SPEED FREAK", "cine.img", "speedfreak"},
-    {"STAR HAWK", "cine.img", "starhawk"},
-    {"STAR CASTLE", "cine.img", "starcastle"},
-    {"DEMON", "cine.img", "demon"},
-    {"ARMOR A", "cine.img", "armorattack"},
-    {"SUNDANCE", "cine.img", "sundance"},
-    {"BARRIER", "cine.img", "barrier"},
-    {"BOXING BUGS", "cine.img", "boxingbugs"},
-    {"COSMIC CHASM", "cine.img", "cosmicchasm"},
-    {"SOLAR QUEST", "cine.img", "solarquest"},
-    {"TAILGUNNER", "cine.img", "tailgunner"},
-    {"WAR OF THE WORLDS", "cine.img", "waroftheworlds"},
-    {"WARRIOR", "cine.img", "warrior"},
-    {"BATTLE ZONE", "battlezone.img", ""},
+    bool present;
+  } PiTrexMenuItem;
+  PiTrexMenuItem piTrexMenuItems[] = {
+    {"RASPBIAN", "kernel.img", "", false},
+    {"CALIBRATE", "calibrate.img", "", false},
+    {"ASTEROIDS", "asteroids_sbt.img", "", false},
+    {"TAILGUNNER", "tailgunner.img", "", false},
+    {"VECX EMUL", "vecxemul.img", "", false},
+    {"VECX DIRECT", "vecxemuld.img", "", false},
+    {"GYROCKS", "gyrocks.img", "", false},
+    {"HELLO", "hello.img", "", false},
+    {"PACMAN", "pacman.img", "", false},
+    {"GRAVITAR", "gravitar.img", "", false},
+    {"SPACEDUEL", "spaceduel.img", "", false},
+    {"TEMPEST", "tempest.img", "", false},
+    {"LUNAR LANDER", "lunar.img", "", false},
+    {"BLACK WIDOW", "blackwidow.img", "", false},
+    {"DELUXE", "deluxe.img", "", false},
+    {"RED BARON", "redbaron.img", "", false},
+    {"RIPOFF", "cine.img", "ripoff", false},
+    {"SPACE WARS", "cine.img", "spacewars", false},
+    {"SPEED FREAK", "cine.img", "speedfreak", false},
+    {"STAR HAWK", "cine.img", "starhawk", false},
+    {"STAR CASTLE", "cine.img", "starcastle", false},
+    {"DEMON", "cine.img", "demon", false},
+    {"ARMOR A", "cine.img", "armorattack", false},
+    {"SUNDANCE", "cine.img", "sundance", false},
+    {"BARRIER", "cine.img", "barrier", false},
+    {"BOXING BUGS", "cine.img", "boxingbugs", false},
+    {"COSMIC CHASM", "cine.img", "cosmicchasm", false},
+    {"SOLAR QUEST", "cine.img", "solarquest", false},
+    {"TAILGUNNER", "cine.img", "tailgunner", false},
+    {"WAR OF THE WORLDS", "cine.img", "waroftheworlds", false},
+    {"WARRIOR", "cine.img", "warrior", false},
+    {"BATTLE ZONE", "battlezone.img", "", false},
   };
 
   char *selected = ">";
-  int max = (sizeof(menuItems)/sizeof(menuItems[0]))-1;
+  int max = (sizeof(piTrexMenuItems)/sizeof(piTrexMenuItems[0]))-1;
 
   char *selectedCursor = ">";
 
@@ -199,9 +210,12 @@ void bootMenu(void)
     loaderSettings.lastSelection = (unsigned char) selectedMenu; // remember last started game
 
     for (i = 0; i <= max; i++) {
-      if (selectedMenu==i) loadAndStart(menuItems[i].img, menuItems[i].param);
+      if (selectedMenu==i) loadAndStart(piTrexMenuItems[i].img, piTrexMenuItems[i].param);
     }
   }
+
+  // boot to Rasbian if we time out
+  if (checkTimedOut) loadAndStart(piTrexMenuItems[0].img, piTrexMenuItems[0].param);
 
 }
 
@@ -241,6 +255,7 @@ void loaderMain()
     }
     selectionStart = 0;
     selectionMade = 0;
+    bootTimeout = 10000000;
 
     vectrexinit(1); // pitrex
     v_init(); // vectrex interface
@@ -277,5 +292,6 @@ void loaderMain()
         v_printString(-20, -100, ss[s], 5, b);
         bootMenu();
         if (ymloaded) v_playYM();
+        currentTicks++;
     }
 }
