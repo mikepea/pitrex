@@ -109,6 +109,7 @@ int bootTimeout;
 int currentTicks;
 
 bool checkTimedOut() {
+  if ( bootTimeout == 0 ) return false; // disabled
   if (currentTicks > bootTimeout) return true;
   return false;
 }
@@ -125,7 +126,7 @@ void bootMenu(void)
     bool present;
   } PiTrexMenuItem;
   PiTrexMenuItem piTrexMenuItems[] = {
-    {"RASPBIAN", "kernel.img", "", false},
+    {"RASPBIAN", "kernel.img", "", true},
     {"CALIBRATE", "calibrate.img", "", false},
     {"ASTEROIDS", "asteroids_sbt.img", "", false},
     {"TAILGUNNER", "tailgunner.img", "", false},
@@ -159,7 +160,6 @@ void bootMenu(void)
     {"BATTLE ZONE", "battlezone.img", "", false},
   };
 
-  char *selected = ">";
   int max = (sizeof(piTrexMenuItems)/sizeof(piTrexMenuItems[0]))-1;
 
   char *selectedCursor = ">";
@@ -173,11 +173,11 @@ void bootMenu(void)
     int currentItem = brightnessCounter + selectionStart;
     if (!(currentItem<0) && (!(currentItem>max)))
     {
-      int b;
-      if (piTrexMenuItems[currentItem].present)
-        b = brightnesses[brightnessCounter];
-      else
-        b = 30; // unavailable, greyed out
+      int b = brightnesses[brightnessCounter];
+      if (!piTrexMenuItems[currentItem].present)
+      {
+        if (b > 50) b = 50; // unavailable, greyed out
+      }
 
       v_printString(x,y, piTrexMenuItems[currentItem].DISPLAYNAME, 5, b);
     }
@@ -189,6 +189,7 @@ void bootMenu(void)
 
   if ((currentJoy1Y>50) && (selectionMade==0))
   {
+    bootTimeout = 0;
     selectionStart++;
     if (selectionStart>max-3)
     {
@@ -198,6 +199,7 @@ void bootMenu(void)
   }
   if ((currentJoy1Y<-50) && (selectionMade==0))
   {
+    bootTimeout = 0;
     selectionStart--;
     if (selectionStart<0-3) selectionStart=0-3;
     selectionMade = 1;
@@ -215,7 +217,7 @@ void bootMenu(void)
   }
 
   // boot to Rasbian if we time out
-  if (checkTimedOut) loadAndStart(piTrexMenuItems[0].img, piTrexMenuItems[0].param);
+  if (checkTimedOut()) loadAndStart(piTrexMenuItems[0].img, piTrexMenuItems[0].param);
 
 }
 
@@ -255,7 +257,9 @@ void loaderMain()
     }
     selectionStart = 0;
     selectionMade = 0;
-    bootTimeout = 10000000;
+    bootTimeout = 1000; // about 20s TODO make this configurable.
+    //bootTimeout = 0; // disabled
+    currentTicks = 0;
 
     vectrexinit(1); // pitrex
     v_init(); // vectrex interface
@@ -292,6 +296,7 @@ void loaderMain()
         v_printString(-20, -100, ss[s], 5, b);
         bootMenu();
         if (ymloaded) v_playYM();
+
         currentTicks++;
     }
 }
