@@ -7,6 +7,10 @@ BUILD_DIR := $(BUILD_DIR_PURE)/
 
 PITREX_DIR := ../pitrex/pitrex/
 VECTREX_DIR := ../pitrex/vectrex/
+INSTALL_DIR := /opt/pitrex/
+BIN_DIR := $(INSTALL_DIR)bin
+SHARE_DIR := $(INSTALL_DIR)share/linmenu/
+
 CFLAGS := -Ofast -I../pitrex/ -DPIZERO -DRPI0
 CC := gcc
 
@@ -38,4 +42,11 @@ linmenu: $(BUILD_DIR)linmenu.o pitrexLib
 clean:
 	$(RM) $(BUILD_DIR)*.*
 	$(RM) linmenu
+
+install:
+	mkdir -p $(BIN_DIR)
+	cp linmenu LINMENU $(BIN_DIR)
+	mkdir -p $(SHARE_DIR)
+	cp ../piTrexBoot/pitrexSample.raw  $(SHARE_DIR)
+	cp ../piTrexBoot/menu.ym  $(SHARE_DIR)
 
