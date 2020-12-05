@@ -20,7 +20,6 @@ CC	= arm-none-eabi-gcc
 AS	= $(CC)
 AR	= arm-none-eabi-ar
 
-SUDO = sudo
 CP   = cp
 .PHONY: dirCheck
 .PHONY: pitrexLib loaderObjects
@@ -135,7 +134,7 @@ clean:
 
 install:
 	test -f /boot/config.txt
-	$(SUDO) $(CP) \
+	$(CP) \
 		pitrex.img \
 		loader.pit \
 		pitrexSample.raw \
