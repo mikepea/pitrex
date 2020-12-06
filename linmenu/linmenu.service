@@ -1,0 +1,16 @@
+# systemd config file to start linmenu on boot
+#
+[Unit]
+Description=PiTrex Linux Menu
+After=local-fs.target
+
+[Service]
+ExecStart=/bin/bash /opt/pitrex/bin/LINMENU
+WorkingDirectory=/tmp
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
